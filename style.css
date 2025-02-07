@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Manrope', sans-serif;
+}
+
+body {
+    overflow: hidden;
+}
+
+canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background-color: black;
+}
+
+.objects-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 100;
+}
+
+.player {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px; height: 100px;
+    background-color: #ffffff;
+    border-radius: 20px;
+    transition: all .5s ease-in-out;
+    opacity: 0;
+}
+
+.player-flash {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 100vh; height: 100vh;
+    background: radial-gradient(circle at center, #ffffff 0%, #ffffff 40px, #ffffff00 200px);
+    opacity: 0;
+    transition: 0.28s ease-out;
+    z-index: 200;
+}
+
+.message {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffffff;
+    font-size: 24px;
+    transition: all .5s ease-in-out;
+    opacity: 0;
+}
+
+.message span {
+    font-size: 24px;
+    margin-right: 10px;
+    vertical-align: middle;
+    margin-bottom: 5px;
+}   
