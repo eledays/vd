@@ -13,6 +13,51 @@ let message = document.querySelector('.message');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+var posX = window.innerWidth / 2;
+var posY = window.innerHeight / 2;
+const PLAYER_SIZE = 100;
+const STEP = 100;
+
+let waves = [];
+
+class Wave {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 10;
+        this.opacity = 0.5;
+        this.maxRadius = 50;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    update() {
+        this.radius += 1;
+        this.opacity -= 0.01;
+        return this.opacity > 0;
+    }
+}
+
+function createWave(x, y) {
+    waves.push(new Wave(x, y));
+    console.log(waves);
+}
+
+function animateWaves() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    waves = waves.filter(wave => {
+        wave.draw();
+        return wave.update();
+    });
+    requestAnimationFrame(animateWaves);
+}
+
 function startAnimation() {
     window.removeEventListener('click', startAnimation);
     message.style.opacity = '0';
@@ -24,10 +69,47 @@ function startAnimation() {
         player.style.opacity = '1';
         playerFlash.style.opacity = '0';
         playerFlash.style.transform = 'translate(-50%, -50%) scale(1.5)';
+        main(5);
     }, 280);
 }
 
-// window.addEventListener('click', startAnimation);
+function initPlayerControl() {
+    window.addEventListener('keydown', keyDownHandler);
+}
+
+function keyDownHandler(e) {
+    createWave(posX, posY);
+    animateWaves(); 
+    
+    switch(e.key) {
+        case 'ArrowUp':
+            if (posY - STEP - PLAYER_SIZE / 2 > 0) posY = Math.max(posY - STEP, 0);
+            break;
+        case 'ArrowDown':
+            if (posY + STEP + PLAYER_SIZE / 2 < window.innerHeight) posY = Math.min(posY + STEP, window.innerHeight);
+            break;
+        case 'ArrowLeft':
+            if (posX - STEP - PLAYER_SIZE / 2 > 0) posX = Math.max(posX - STEP, 0);
+            break;
+        case 'ArrowRight':
+            if (posX + STEP + PLAYER_SIZE / 2 < window.innerWidth) posX = Math.min(posX + STEP, window.innerWidth);
+            break;
+    }
+    
+    // Обновляем позицию игрока
+    let oldTransform = player.style.transform;
+    let newTransform = `translate(${posX - window.innerWidth / 2}px, ${posY - window.innerHeight / 2}px) translate(-50%, -50%)`;
+    player.style.transform = newTransform;
+
+    if (newTransform !== oldTransform) {
+        window.removeEventListener('keydown', keyDownHandler);
+        setTimeout(() => {
+            window.addEventListener('keydown', keyDownHandler);
+        }, 500);
+    }
+
+    console.log(posX, posY);
+}
 
 function main(step = 0) {
     if (step === 0) {
@@ -69,9 +151,12 @@ function main(step = 0) {
             window.addEventListener('click', startAnimation);
         }, 500);
     }
+    else if (step === 5) {
+        initPlayerControl();
+    }
     else if (step === 100) {
         startAnimation();
     }
 }
 
-main();
+main(4);
