@@ -10,11 +10,17 @@ let waterTouch = document.getElementById('water_touch');
 let wavesSound = document.getElementById('waves');
 wavesSound.loop = true;
 let message = document.querySelector('.message');
-let score = document.querySelector('.score');
+let scoreBlock = document.querySelector('.score');
 let coin = document.querySelector('.coin');
+let coin1 = document.getElementById('coin1');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+canvas.style.position = 'fixed';
+canvas.style.top = '0';
+canvas.style.left = '0';
+canvas.style.zIndex = '1';
+canvas.style.pointerEvents = 'none';
 
 var posX = window.innerWidth / 2;
 var posY = window.innerHeight / 2;
@@ -25,14 +31,80 @@ var waves = [];
 
 let isPaused = false;
 
+const CELL_SIZE = 100;
+let coins = [];
+let score = 0;
+
+class Coin {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.element = document.createElement('div');
+        this.element.className = 'coin';
+        this.element.style.position = 'absolute';
+        this.element.style.left = `${x}px`;
+        this.element.style.top = `${y}px`;
+        this.element.style.transform = 'translate(-50%, -50%)';
+        document.body.appendChild(this.element);
+    }
+
+    remove() {
+        this.element.remove();
+    }
+}
+
+function generateCoin() {
+    // Получаем количество ячеек по ширине и высоте
+    const gridWidth = Math.floor((window.innerWidth / 2 - CELL_SIZE / 2) / CELL_SIZE) * 2 + 1;
+    const gridHeight = Math.floor(window.innerHeight / CELL_SIZE);
+    
+    // Выбираем случайную ячейку
+    const cellX = Math.floor(Math.random() * gridWidth);
+    const cellY = Math.floor(Math.random() * gridHeight);
+    
+    // Переводим координаты ячейки в пиксели (центр ячейки)
+    const x = cellX * CELL_SIZE + CELL_SIZE / 2 + (window.innerWidth - gridWidth * CELL_SIZE) / 2;
+    const y = cellY * CELL_SIZE + CELL_SIZE / 2 + (window.innerHeight - gridHeight * CELL_SIZE) / 2;
+    
+    // Проверяем, нет ли уже монетки в этой ячейке
+    if (!coins.some(coin => coin.x === x && coin.y === y)) {
+        const coin = new Coin(x, y);
+        coins.push(coin);
+    }
+}
+
+function checkCoinCollision() {
+    const playerRadius = PLAYER_SIZE / 2;
+    coins.forEach((coin, index) => {
+        const distance = Math.hypot(posX - coin.x, posY - coin.y);
+        if (distance < playerRadius + 20) { // 20 - примерный радиус монетки
+            coin.remove();
+            coins.splice(index, 1);
+            score++;
+            scoreBlock.innerHTML = score;
+            coin1.currentTime = 0;
+            coin1.play();
+
+            if (coins.length === 0) {
+                generateCoin();
+            }
+            
+            if (score === 10) {
+                main(8);
+            }
+        }
+    });
+}
+
 function startAnimation() {
     window.removeEventListener('click', startAnimation);
     message.style.opacity = '0';
-    score.style.opacity = '1';
+    scoreBlock.style.opacity = '1';
     flash.play();
     waterTouch.play();
     playerFlash.style.opacity = '0.5';
     playerFlash.style.transform = 'translate(-50%, -50%) scale(1.5)';
+    main(5);
     setTimeout(() => {
         player.style.opacity = '1';
         playerFlash.style.opacity = '0';
@@ -42,26 +114,25 @@ function startAnimation() {
         setTimeout(() => {
             message.innerHTML = 'Используй стрелки для перемещения';
             message.style.opacity = '1';
-            setTimeout(() => {
-                message.style.opacity = '0';
-                setTimeout(() => {
-                    message.innerHTML = 'Собери как можно больше монеток';
-                    message.style.opacity = '1';
-                    setTimeout(() => {
-                        message.style.opacity = '0';
-                        main(5);
-                    }, 5000);
-                }, 500);
-            }, 5000);
+            setTimeout(() => main(6), 3000);
         }, 300);
     }, 280);
 }
 
 function initPlayerControl() {
     window.addEventListener('keydown', keyDownHandler);
+    
+    function gameLoop() {
+        if (!isPaused) {
+            checkCoinCollision();
+        }
+        requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
 }
 
 function keyDownHandler(e) {
+    console.log(e.key);
     let oldPosX = posX;
     let oldPosY = posY;
 
@@ -203,6 +274,7 @@ function main(step = 0) {
         }, 500);
     }
     else if (step === 5) {
+        console.log('step 5');
         if (player.style.opacity == 0) {
             player.style.opacity = '1';
         }
@@ -210,8 +282,29 @@ function main(step = 0) {
         wavesSound.volume = 0.2;
         wavesSound.play();
     }
-    else if (step === 100) {
-        startAnimation();
+    else if (step === 6) {
+        message.style.opacity = '0';
+        setTimeout(() => {
+            message.innerHTML = 'Собери как можно больше монеток';
+            message.style.opacity = '1';
+            setTimeout(() => {
+                main(7);
+            }, 3000);
+        }, 500);
+    }
+    else if (step === 7) {
+        message.style.opacity = '0';
+        for (let i = 0; i < 10; i++) {
+            setTimeout(generateCoin, 100 * i);
+        }
+    }
+    else if (step === 8) {
+        for (let i = 0; i < 10; i++) {
+            setTimeout(generateCoin, 100 * i);
+        }
+        wavesSound.pause();
+        music.play();
+        waterTouch.volume = 0;
     }
 }
 

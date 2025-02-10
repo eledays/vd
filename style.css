@@ -80,16 +80,6 @@ canvas {
     z-index: 100;
 }
 
-.coin {
-    position: absolute;
-    z-index: 100;
-    width: 100px; height: 100px;
-    background-color: #885d00;
-    border-radius: 20px;
-    transition: all .5s ease-in-out;
-    opacity: 0;
-}
-
 p.score {
     position: absolute;
     top: 50px; left: 50px;
@@ -97,4 +87,24 @@ p.score {
     font-size: 24px;
     z-index: 1000;
     opacity: 0;
+}
+
+.coin {
+    width: 30px;
+    height: 30px;
+    background: gold;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    animation: coinFloat 1s infinite ease-in-out alternate;
+    z-index: 100;
+    transition: all .5s ease-in-out;
+}
+
+@keyframes coinFloat {
+    from {
+        transform: translate(-50%, -50%) translateY(-5px);
+    }
+    to {
+        transform: translate(-50%, -50%) translateY(5px);
+    }
 }
