@@ -8,9 +8,18 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
+    <p class="score">0</p>
     <div class="objects-layer">
         <div class="player"></div>
+        <div class="coin"></div>
         <div class="player-flash"></div>
+    </div>
+    <div class="spots">
+        <img class="spot" src="data/spot.png" alt="">
+        <img class="spot" src="data/spot.png" alt="">
+        <img class="spot" src="data/spot.png" alt="">
+        <img class="spot" src="data/spot.png" alt="">
+        <img class="spot" src="data/spot.png" alt="">
     </div>
     <canvas></canvas>
 
@@ -25,6 +34,10 @@
     <audio id="water_touch" preload="auto" style="display: none;">
         <source src="data/water_touch.mp3" type="audio/mpeg">
     </audio>
+    <audio id="waves" preload="auto" style="display: none;">
+        <source src="data/waves.mp3" type="audio/mpeg">
+    </audio>
+
 
     <script src="script.js"></script>
 </body>
