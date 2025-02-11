@@ -26,6 +26,9 @@ var posX = window.innerWidth / 2;
 var posY = window.innerHeight / 2;
 const PLAYER_SIZE = 100;
 const STEP = 100;
+var COINS_COUNT = 10;
+var coinColor = 'gold';
+var coinShadow = '0 0 10px rgba(255, 215, 0, 0.5)';
 
 var waves = [];
 
@@ -34,6 +37,7 @@ let isPaused = false;
 const CELL_SIZE = 100;
 let coins = [];
 let score = 0;
+var gameLoopWork = true;
 
 class Coin {
     constructor(x, y) {
@@ -45,6 +49,8 @@ class Coin {
         this.element.style.left = `${x}px`;
         this.element.style.top = `${y}px`;
         this.element.style.transform = 'translate(-50%, -50%)';
+        this.element.style.backgroundColor = coinColor;
+        this.element.style.boxShadow = coinShadow;
         document.body.appendChild(this.element);
     }
 
@@ -54,6 +60,10 @@ class Coin {
 }
 
 function generateCoin() {
+    if (coins.length >= COINS_COUNT) {
+        return;
+    }
+
     // Получаем количество ячеек по ширине и высоте
     const gridWidth = Math.floor((window.innerWidth / 2 - CELL_SIZE / 2) / CELL_SIZE) * 2 + 1;
     const gridHeight = Math.floor(window.innerHeight / CELL_SIZE);
@@ -84,14 +94,16 @@ function checkCoinCollision() {
             scoreBlock.innerHTML = score;
             coin1.currentTime = 0;
             coin1.play();
-
-            if (coins.length === 0) {
-                generateCoin();
-            }
             
-            if (score === 10) {
+            if (score === COINS_COUNT) {
                 main(8);
             }
+
+            // if (coins.length === 0) {
+            //     for (let i = 0; i < COINS_COUNT; i++) {
+            //         generateCoin();
+            //     }
+            // }
         }
     });
 }
@@ -118,17 +130,24 @@ function startAnimation() {
         }, 300);
     }, 280);
 }
+    
+function gameLoop() {
+    if (!isPaused) {
+        checkCoinCollision();
+    }
+    if (!gameLoopWork) {
+        for (let coin of coins) {
+            coin.remove();
+        }
+        return;
+    }
+    requestAnimationFrame(gameLoop);
+}
 
 function initPlayerControl() {
+    window.removeEventListener('keydown', keyDownHandler);
+    player.style.opacity = '1';
     window.addEventListener('keydown', keyDownHandler);
-    
-    function gameLoop() {
-        if (!isPaused) {
-            checkCoinCollision();
-        }
-        requestAnimationFrame(gameLoop);
-    }
-    gameLoop();
 }
 
 function keyDownHandler(e) {
@@ -279,6 +298,8 @@ function main(step = 0) {
             player.style.opacity = '1';
         }
         initPlayerControl();
+        gameLoop();
+        var coinInterval = setInterval(generateCoin, 3000);
         wavesSound.volume = 0.2;
         wavesSound.play();
     }
@@ -294,19 +315,134 @@ function main(step = 0) {
     }
     else if (step === 7) {
         message.style.opacity = '0';
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < COINS_COUNT; i++) {
             setTimeout(generateCoin, 100 * i);
         }
     }
     else if (step === 8) {
-        for (let i = 0; i < 10; i++) {
-            setTimeout(generateCoin, 100 * i);
-        }
+        gameLoop();
+        coinColor = 'rgb(45 45 45)';
+        coinShadow = '';
+        initPlayerControl();
         wavesSound.pause();
         music.play();
+
+        for (let coin of coins) {
+            coin.element.style.transition = 'all 5s';
+            coin.element.style.backgroundColor = coinColor;
+            coin.element.style.boxShadow = coinShadow;
+            setTimeout(() => {
+                coin.element.style.transition = 'all 1s';
+            }, 5000);
+        }
+
         waterTouch.volume = 0;
+        setTimeout(() => {
+            coin1.volume = 0;
+        }, 1000);
+
+        player.style.transition = 'all 1s, background-color 15s';
+        player.style.backgroundColor = '#424242';
+    }
+    else if (step === 9) {
+        // let yellowSpot = document.createElement('img');
+        // yellowSpot.src = 'data/yellow_spot.png';
+        // yellowSpot.style.position = 'absolute';
+        // yellowSpot.style.left = '50%';
+        // yellowSpot.style.top = '50%';
+        // yellowSpot.style.transform = 'translate(-50%, -50%)';
+        // yellowSpot.style.zIndex = '100';
+        // yellowSpot.style.opacity = '0';
+        // document.body.appendChild(yellowSpot);
+        // setTimeout(() => {  
+        //     yellowSpot.style.transition = 'all 1s';
+        //     yellowSpot.style.opacity = '0.6';
+        //     setTimeout(() => {
+        //         yellowSpot.style.transition = 'all 1.5s';
+        //         yellowSpot.style.opacity = '0';
+        //     }, 1000);
+        // }, 1000);
+        player.style.transition = 'all 5s';
+        player.style.backgroundColor = 'rgb(65, 57, 35)';
+        setTimeout(() => {
+            player.style.backgroundColor = 'rgb(45 45 45)';
+            setTimeout(() => {
+                player.style.transition = 'all 1s';
+            }, 5000);
+        }, 5000);
+    }
+    else if (step === 10) {
+        let colorSpot = document.createElement('div');
+        colorSpot.className = 'color-spot';
+        colorSpot.style.setProperty('--color', 'rgb(63, 56, 42)');
+        colorSpot.style.setProperty('--size', '6');
+        colorSpot.style.bottom = '20vh';
+        colorSpot.style.left = '20vw';
+        document.body.appendChild(colorSpot);
+        setTimeout(() => {
+            colorSpot.remove();
+        }, 5000);
+    }
+    else if (step === 11) {
+        let colorSpot = document.createElement('div');
+        colorSpot.className = 'color-spot';
+        colorSpot.style.setProperty('--color', 'rgb(83, 67, 34)');
+        colorSpot.style.setProperty('--size', '10');
+        colorSpot.style.top = '20vh';
+        colorSpot.style.right = '20vw';
+        document.body.appendChild(colorSpot);
+        setTimeout(() => {
+            colorSpot.remove();
+        }, 5000);
+    }
+    else if (step === 12) {
+        let colorSpot = document.createElement('div');
+        colorSpot.className = 'color-spot';
+        colorSpot.style.setProperty('--color', 'rgb(114, 84, 23)');
+        colorSpot.style.setProperty('--size', '14');
+        colorSpot.style.top = '40vh';
+        colorSpot.style.left = '40vw';
+        document.body.appendChild(colorSpot);
+        setTimeout(() => {
+            colorSpot.remove();
+        }, 5000);
+    }
+    else if (step === 13) {
+        let colorSpot = document.createElement('div');
+        colorSpot.className = 'color-spot';
+        colorSpot.style.setProperty('--color', 'rgb(145, 96, 0)');
+        colorSpot.style.setProperty('--size', '18');
+        colorSpot.style.bottom = '40vh';
+        colorSpot.style.right = '40vw';
+        document.body.appendChild(colorSpot);
+        setTimeout(() => {
+            colorSpot.remove();
+        }, 5000);
     }
 }
+
+setInterval(() => {
+    if (Math.floor(music.currentTime) === 47 && !window.step9Triggered) {
+        window.step9Triggered = true;
+        main(9);
+    }
+    else if (Math.floor(music.currentTime) === 72 && !window.step10Triggered) {
+        window.step10Triggered = true;
+        main(10);
+    }
+    else if (Math.floor(music.currentTime) === 75 && !window.step11Triggered) {
+        window.step11Triggered = true;
+        main(11);
+    }
+    else if (Math.floor(music.currentTime) === 78 && !window.step12Triggered) {
+        window.step12Triggered = true;
+        main(12);
+    }
+    else if (Math.floor(music.currentTime) === 81 && !window.step13Triggered) {
+        window.step13Triggered = true;
+        main(13);
+    }    
+}, 50);
 
 window.addEventListener('keydown', (e) => {
     if (e.key === 'p' || e.key === 'з') {
@@ -336,8 +472,8 @@ Array.from(spots.children).forEach((spot, i) => {
     const offsetX = (Math.random() - 0.5) * cellWidth * 0.5;
     const offsetY = (Math.random() - 0.5) * cellHeight * 0.5;
     
-    const left = col * cellWidth + cellWidth/2 + offsetX;
-    const top = row * cellHeight + cellHeight/2 + offsetY;
+    const left = col * cellWidth + cellWidth / 2 + offsetX;
+    const top = row * cellHeight + cellHeight / 2 + offsetY;
     
     const size = Math.random() * 200 + 1000;
     const rotate = Math.random() * 360;
@@ -350,5 +486,6 @@ Array.from(spots.children).forEach((spot, i) => {
     spot.style.opacity = .5;
 });
 
-waveAnimation();
-main(4);
+// waveAnimation();
+// main(8);
+// music.currentTime = 68;
