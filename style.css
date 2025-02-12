@@ -131,3 +131,29 @@ p.score {
         transform: scale(5);
     }
 }
+
+.big-img {
+    opacity: 0;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    height: 100vh;
+    z-index: 99;
+    animation: bigImgOpacity var(--duration) 1 ease-in-out alternate forwards;
+}
+
+@keyframes bigImgOpacity {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: var(--opacity);
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+p {
+    font-family: 'Manrope', sans-serif;
+}

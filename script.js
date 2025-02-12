@@ -419,29 +419,168 @@ function main(step = 0) {
             colorSpot.remove();
         }, 5000);
     }
+    else if (step === 14) {
+        let opacity = 0.05;
+        let duration = 3;
+
+        console.log('step 14');
+        let windowImg = document.createElement('img');
+        windowImg.src = 'data/window.png';
+        windowImg.style.setProperty('--opacity', opacity);
+        windowImg.style.setProperty('--duration', duration + 's');
+        windowImg.className = 'big-img';
+        document.body.appendChild(windowImg);
+        setTimeout(() => {
+            windowImg.remove();
+        }, duration * 1000);
+    }
+    else if (step === 15) {
+        let opacity = 0.2;
+        let duration = 7;
+
+        let nightImg = document.createElement('img');
+        nightImg.src = 'data/night.png';
+        nightImg.style.setProperty('--opacity', opacity);
+        nightImg.style.setProperty('--duration', duration + 's');
+        nightImg.className = 'big-img';
+        document.body.appendChild(nightImg);
+        setTimeout(() => {
+            nightImg.remove();
+        }, duration * 1000);
+    }
+    else if (step === 16) {
+        let p = document.createElement('p');
+        p.style.fontSize = '40px';
+        p.style.color = 'white';
+        p.style.position = 'absolute';
+        p.style.top = '-100px';
+        p.style.left = '0';
+        p.style.width = '100vw';
+        p.style.height = '100vh';
+        p.style.zIndex = '99';
+        p.style.whiteSpace = 'pre-wrap';
+        p.style.wordBreak = 'break-all';
+        p.style.overflowWrap = 'break-word';
+        p.style.lineHeight = '1';
+        p.style.color = 'rgb(34, 34, 34)';
+        document.body.appendChild(p);
+        for (let i = 0; i < 10000; i++) {
+            setTimeout(() => {
+                p.innerHTML += '•';
+            }, 1 * i);
+        }
+        setTimeout(() => {
+            p.style.transition = 'all 1s';
+            p.style.opacity = '0';
+        }, 1000);
+    }
+    else if (step === 17) {
+        player.style.transition = 'all 2S';
+        player.style.backgroundColor = 'rgb(104, 40, 40)';
+        player.style.filter = 'drop-shadow(0 0 10px rgb(104, 40, 40))';
+        setTimeout(() => {
+            player.style.backgroundColor = 'rgb(83, 83, 83)';
+            player.style.transition = 'all 2s';
+            player.style.filter = 'drop-shadow(0 0 0px rgb(104, 40, 40))';
+        }, 1000);
+    }
+    else if (step === 18) {
+        player.style.transition = 'all 2s';
+        player.style.backgroundColor = 'rgb(134, 47, 47)';
+        player.style.filter = 'drop-shadow(0 0 30px rgb(134, 47, 47))';
+        setTimeout(() => {
+            player.style.backgroundColor = 'rgb(110, 110, 110)';
+            player.style.transition = 'all 2s';
+            player.style.filter = 'drop-shadow(0 0 0px rgb(134, 47, 47))';
+        }, 1000);
+    }
+    else if (step === 19) {
+        player.style.transition = 'all 2s';
+        player.style.backgroundColor = 'rgb(161, 43, 43)';
+        player.style.filter = 'drop-shadow(0 0 50px rgb(161, 43, 43))';
+        setTimeout(() => {
+            player.style.backgroundColor = 'rgb(138, 138, 138)';
+            player.style.transition = 'all 2s';
+            player.style.filter = 'drop-shadow(0 0 0px rgb(161, 43, 43))';
+        }, 1000);
+    }
+    else if (step === 20) {
+        player.style.transition = 'all 2s';
+        player.style.backgroundColor = 'rgb(199, 34, 34)';
+        player.style.filter = 'drop-shadow(0 0 70px rgb(199, 34, 34))';
+        setTimeout(() => {
+            player.style.backgroundColor = 'rgb(206, 206, 206)';
+            player.style.transition = 'all 2s';
+            player.style.filter = 'drop-shadow(0 0 0px rgb(199, 34, 34))';
+        }, 1000);
+    }   
+    else if (step === 21) {
+        let forestImg = document.createElement('img');
+        forestImg.src = 'data/forest.png';
+        forestImg.className = 'big-img';
+        forestImg.style.setProperty('--opacity', 0.5);
+        forestImg.style.setProperty('--duration', '5s');
+        document.body.appendChild(forestImg);
+        setTimeout(() => {
+            forestImg.remove();
+        }, 5000);
+    }
 }
 
 setInterval(() => {
-    if (Math.floor(music.currentTime) === 47 && !window.step9Triggered) {
+    let time = Math.floor(music.currentTime * 10) / 10;
+    if (time === 47 && !window.step9Triggered) {
         window.step9Triggered = true;
         main(9);
     }
-    else if (Math.floor(music.currentTime) === 72 && !window.step10Triggered) {
+    else if (time === 72 && !window.step10Triggered) {
         window.step10Triggered = true;
         main(10);
     }
-    else if (Math.floor(music.currentTime) === 75 && !window.step11Triggered) {
+    else if (time === 75.2 && !window.step11Triggered) {
         window.step11Triggered = true;
         main(11);
     }
-    else if (Math.floor(music.currentTime) === 78 && !window.step12Triggered) {
+    else if (time === 78.5 && !window.step12Triggered) {
         window.step12Triggered = true;
         main(12);
     }
-    else if (Math.floor(music.currentTime) === 81 && !window.step13Triggered) {
+    else if (time === 81.5 && !window.step13Triggered) {
         window.step13Triggered = true;
         main(13);
-    }    
+    } 
+    else if (time === 84.3 && !window.step14Triggered) {
+        window.step14Triggered = true;
+        main(14);
+    }
+    else if (time === 88 && !window.step15Triggered) {
+        window.step15Triggered = true;
+        main(15);
+    }
+    else if (time === 95 && !window.step16Triggered) {
+        window.step16Triggered = true;
+        main(16);
+    }
+    else if (time === 123.4 && !window.step17Triggered) {
+        window.step17Triggered = true;
+        main(17);
+    }
+    else if (time === 126.2 && !window.step18Triggered) {
+        window.step18Triggered = true;
+        main(18);
+    }
+    else if (time === 129 && !window.step19Triggered) {
+        window.step19Triggered = true;
+        main(19);
+    }
+    else if (time === 131.7 && !window.step20Triggered) {
+        window.step20Triggered = true;
+        main(20);
+    }
+    else if (time === 135 && !window.step21Triggered) {
+        window.step21Triggered = true;
+        main(21);
+    }
 }, 50);
 
 window.addEventListener('keydown', (e) => {
@@ -486,6 +625,8 @@ Array.from(spots.children).forEach((spot, i) => {
     spot.style.opacity = .5;
 });
 
-// waveAnimation();
-// main(8);
-// music.currentTime = 68;
+waveAnimation();
+main(8);
+music.currentTime = 132;
+
+// Сейчас: сделать кубик в лесу
