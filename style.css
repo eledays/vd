@@ -157,3 +157,23 @@ p.score {
 p {
     font-family: 'Manrope', sans-serif;
 }
+
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 99;
+    animation: particleMoving var(--duration) infinite ease-in-out;
+}
+
+@keyframes particleMoving {
+    0% {
+        margin-top: 0;
+    }
+    50% {
+        margin-top: 5px;
+    }
+    100% {
+        margin-top: 0;
+    }
+}
