@@ -1186,5 +1186,5 @@ Array.from(spots.children).forEach((spot, i) => {
 });
 
 waveAnimation();
-main(8);
-music.currentTime = 206;
+main();
+// music.currentTime = 206;
