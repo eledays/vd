@@ -31,6 +31,7 @@ var coinColor = 'gold';
 var coinShadow = '0 0 10px rgba(255, 215, 0, 0.5)';
 
 var waves = [];
+var particles = [];
 
 let isPaused = false;
 
@@ -38,10 +39,15 @@ const CELL_SIZE = 100;
 let coins = [];
 let score = 0;
 var gameLoopWork = true;
-
+var wavesAnimationWork = true;
 var redInterval;
 var scaleInterval;
 var playerScale = 1;
+var coinInterval;
+var noControl = false;
+var clickingInterval;
+var delta = 0;
+window.stepCodes = [];
 
 class Coin {
     constructor(x, y) {
@@ -60,6 +66,50 @@ class Coin {
 
     remove() {
         this.element.remove();
+    }
+}
+
+class Particle {
+    constructor(x, y, color = 'red', size = 10, transition = 2) {
+        this.element = document.createElement('div');
+        this.element.className = 'particle';
+        this.element.style.width = size + 'px';
+        this.element.style.height = size + 'px';
+        this.element.style.backgroundColor = color;
+        this.element.style.left = x + 'px';
+        this.element.style.top = y + 'px';
+        this.element.style.transition = `all ${transition}s`;
+        this.element.style.setProperty('--duration', transition + 's');
+        document.body.appendChild(this.element);
+
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        particles.push(this);
+    }
+
+    move(angle, distance) {
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        this.x = x;
+        this.y = y;
+        this.element.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    moveTo(x, y) {
+        this.x = x;
+        this.y = y;
+        this.element.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    setSize(size) {
+        this.element.style.width = size + 'px';
+        this.element.style.height = size + 'px';
+    }
+
+    remove() {
+        document.body.removeChild(this.element);
+        particles.splice(particles.indexOf(this), 1);
     }
 }
 
@@ -140,9 +190,6 @@ function gameLoop() {
         checkCoinCollision();
     }
     if (!gameLoopWork) {
-        for (let coin of coins) {
-            coin.remove();
-        }
         return;
     }
     requestAnimationFrame(gameLoop);
@@ -155,7 +202,10 @@ function initPlayerControl() {
 }
 
 function keyDownHandler(e) {
-    console.log(e.key);
+    if (noControl) {
+        return;
+    }
+
     let oldPosX = posX;
     let oldPosY = posY;
 
@@ -253,37 +303,23 @@ function waveAnimation() {
         }
     });
 
-    requestAnimationFrame(waveAnimation);
+    if (wavesAnimationWork) {
+        requestAnimationFrame(waveAnimation);
+    }
 }
 
-class Particle {
-    constructor(x, y, color = 'red', size = 10, transition = 2) {
-        this.element = document.createElement('div');
-        this.element.className = 'particle';
-        this.element.style.width = size + 'px';
-        this.element.style.height = size + 'px';
-        this.element.style.backgroundColor = color;
-        this.element.style.left = x + 'px';
-        this.element.style.top = y + 'px';
-        this.element.style.transition = `all ${transition}s`;
-        this.element.style.setProperty('--duration', transition + 's');
-        document.body.appendChild(this.element);
-    }
-
-    move(angle, distance) {
-        const x = Math.cos(angle) * distance;
-        const y = Math.sin(angle) * distance;
-        this.element.style.transform = `translate(${x}px, ${y}px)`;
-        // this.element.style.opacity = '0';
-    }
-
-    remove() {
-        document.body.removeChild(this.element);
-    }
+function sizeUp() {
+    delta += 3;
+    player.style.width = PLAYER_SIZE + delta + 'px';
+    player.style.height = PLAYER_SIZE + delta + 'px';
 }
 
 function main(step = 0) {
     if (step === 0) {
+        if (localStorage.getItem('step') == 3) {
+            main(3);
+            return;
+        }
         setTimeout(() => {
             message.style.opacity = '1';
             message.innerText = 'Привет)';
@@ -300,6 +336,8 @@ function main(step = 0) {
     }
     else if (step === 2) {
         message.style.opacity = '0';
+        window.removeEventListener('resize', reload);
+        window.addEventListener('resize', () => reload(true));
         setTimeout(() => {
             message.innerHTML = '<span class="material-icons">fullscreen</span>И развернуть на весь экран (F11)';
             message.style.opacity = '1';
@@ -313,6 +351,7 @@ function main(step = 0) {
             message.style.opacity = '1';
             setTimeout(main, 5000, 4);
         }, 500);
+        localStorage.clear();
     }
     else if (step === 4) {
         message.style.opacity = '0';
@@ -321,6 +360,7 @@ function main(step = 0) {
             message.style.opacity = '1';
             window.addEventListener('click', startAnimation);
         }, 500);
+        window.removeEventListener('resize', reload);
     }
     else if (step === 5) {
         console.log('step 5');
@@ -329,7 +369,7 @@ function main(step = 0) {
         }
         initPlayerControl();
         gameLoop();
-        var coinInterval = setInterval(generateCoin, 3000);
+        coinInterval = setInterval(generateCoin, 3000);
         wavesSound.volume = 0.2;
         wavesSound.play();
     }
@@ -450,7 +490,7 @@ function main(step = 0) {
         }, 5000);
     }
     else if (step === 14) {
-        let opacity = 0.5;
+        let opacity = 0.3;
         let duration = 3;
 
         console.log('step 14');
@@ -526,6 +566,8 @@ function main(step = 0) {
         }, 1000);
     }
     else if (step === 19) {
+        noControl = true;
+        window.removeEventListener('keydown', keyDownHandler);
         player.style.transition = 'all 2s';
         player.style.backgroundColor = 'rgb(161, 43, 43)';
         player.style.filter = 'drop-shadow(0 0 50px rgb(161, 43, 43))';
@@ -536,6 +578,8 @@ function main(step = 0) {
         }, 1000);
     }
     else if (step === 20) {
+        noControl = true;
+        window.removeEventListener('keydown', keyDownHandler);
         player.style.transition = 'all 2s';
         player.style.backgroundColor = 'rgb(199, 34, 34)';
         player.style.filter = 'drop-shadow(0 0 70px rgb(199, 34, 34))';
@@ -551,6 +595,7 @@ function main(step = 0) {
     }
     else if (step === 22) {
         gameLoopWork = false;
+        clearInterval(coinInterval);
         for (let coin of coins) {
             coin.element.style.transition = 'all 1s';
             coin.element.style.opacity = '0';
@@ -558,6 +603,7 @@ function main(step = 0) {
                 coin.element.remove();
             }, 1000);
         }
+        scoreBlock.style.opacity = '0';
         let forestImg = document.createElement('img');
         forestImg.src = 'data/forest.png';
         forestImg.className = 'big-img';
@@ -618,7 +664,7 @@ function main(step = 0) {
     else if (step === 28) {
         scaleInterval = setInterval(() => {
             player.style.transition = 'all .3s';
-            player.style.transform = 'translate(-50%, -50%) scale(1.1) scale(' + playerScale + ')';
+            player.style.transform = 'translate(-50%, -50%) scale(1.05) scale(' + playerScale + ')';
             setTimeout(() => {
                 player.style.transform = 'translate(-50%, -50%) scale(1) scale(' + playerScale + ')';
             }, 300);
@@ -626,17 +672,19 @@ function main(step = 0) {
     }
     else if (step === 29) {
         // clearInterval(redInterval);
-        // clearInterval(scaleInterval);
-        setInterval(() => {
-            playerScale = Math.max(0.5, playerScale - .01);
-        }, 50);
+        clearInterval(scaleInterval);
+        setTimeout(() => {
+            player.style.transition = 'all 8s';
+            player.style.transform = 'translate(-50%, -50%) scale(0.2)';
+        }, 1000);
     }
     else if (step === 30) {
-        console.log('step 30');
-        for (let i = 0; i < 500; i++) {
+        player.style.transition = 'all 1s';
+        player.style.opacity = '0';
+        for (let i = 0; i < 750; i++) {
             let color = `rgb(${Math.random() * 100 + 155}, 0, 0`;
             let size = Math.random() * 10 + 3;
-            let transition = Math.random() * 3 + 1;
+            let transition = Math.random() * 5 + 1;
             const particle = new Particle(window.innerWidth / 2, window.innerHeight / 2, color, size, transition);
             
             // Random angle and distance
@@ -650,8 +698,386 @@ function main(step = 0) {
             // Remove particle after animation
             setTimeout(() => {
                 particle.remove();
-            }, 30000);
+            }, 60000);
         }
+        wavesAnimationWork = false;
+        for (let spot of spots.children) {
+            spot.style.transition = 'all 1s';
+            spot.style.opacity = '0';
+            setTimeout(() => {
+                spot.remove();
+            }, 1000);
+        }
+    }
+    else if (step === 31) {
+        console.log('step 31');
+        for (let particle of particles) {
+            // particle.element.style.transition = 'all .5s';
+            particle.moveTo(particle.x - 300, particle.y + Math.random() * 50 - 25);
+        }
+    }
+    else if (step === 32) {
+        for (let particle of particles) {
+            particle.moveTo(particle.x + 300, particle.y + 300);
+        }
+    }
+    else if (step === 33) {
+        for (let particle of particles) {
+            particle.moveTo(particle.x, particle.y - 300);
+        }
+    }
+    else if (step === 34) {
+        console.log('step 34');
+        for (let particle of particles) {
+            // Scale down particles by moving them 20% closer to center
+            const centerX = 0;
+            const centerY = 0;
+            particle.setSize(particle.size * 0.7);
+            particle.element.style.transition = 'all 2s';
+            const newX = particle.x * 0.7 + centerX * 0.3;
+            const newY = particle.y * 0.7 + centerY * 0.3;
+            particle.moveTo(newX, newY);
+        }
+    }
+    else if (step === 35) {
+        for (let particle of particles) {
+            particle.element.style.backgroundColor = 'rgb(81, 33, 255)';
+        }
+        setTimeout(() => {
+            for (let particle of particles) {
+                particle.element.style.backgroundColor = 'rgb(255, 0, 0)';
+            }
+        }, 1000);
+        message.style.top = '150px';
+    }
+    else if (step === 36) {
+        noControl = true;
+        clearInterval(scaleInterval);
+        clearInterval(redInterval);
+
+        player.style.transform = 'translate(-50%, -50%)';
+        player.style.backgroundColor = 'rgb(255, 255, 255)';
+        player.style.opacity = '1';
+        player.style.transition = 'all 0s, background-color 50s, transform 50s';
+
+        let k = 0.01;
+        
+        scaleInterval = setInterval(() => {
+            delta -= k * (PLAYER_SIZE + delta);
+            player.style.width = PLAYER_SIZE + delta + 'px';
+            player.style.height = PLAYER_SIZE + delta + 'px';
+        }, 50);
+
+        window.addEventListener('click', sizeUp);
+        window.addEventListener('keydown', sizeUp);
+
+        for (let particle of particles) {
+            particle.element.style.transition = 'all 50s';
+            particle.moveTo(0, 0);
+        }   
+        player.style.backgroundColor = 'rgb(255, 0, 0)';
+        player.style.transform = 'translate(-50%, -50%) rotateZ(360deg)';
+
+        message.innerHTML = 'Кликай, чтобы кубик не сжался';
+        message.style.top = '100px';
+        message.style.opacity = '1';
+
+        setTimeout(() => {
+            message.style.transition = 'all 10s';
+            message.style.opacity = '0';
+            setTimeout(() => {
+                message.style.transition = 'none';
+                message.style.top = '100px';
+                message.style.left = '100px';
+                message.style.transform = 'none';
+            }, 10000);
+        }, 30000);
+    }
+    else if (step === 38) {
+        clearInterval(scaleInterval);
+        window.removeEventListener('click', sizeUp);
+        window.removeEventListener('keydown', sizeUp);
+        player.style.transition = 'all 10s';
+        player.style.transform = 'translate(-50%, -50%) scale(0.00001)';    
+        setTimeout(() => {
+            player.style.opacity = '0';
+        }, 10000);
+    }
+    else if (step === 39) {
+        message.style.transition = 'none';
+        message.style.top = '100px';
+        message.style.left = '100px';
+        message.style.transform = 'none';
+        message.style.opacity = '1';
+        message.innerHTML = '';
+        message.style.transition = 'all 1s';
+        const words = 'Твои глаза подходят к обоям.'.split(' ');
+        
+        // Create all spans at once
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        const br = document.createElement('br');
+        message.appendChild(br);
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index].style.opacity = '1';
+            }, index * 400);
+        });
+    }
+    else if (step === 40) {
+        for (let child of message.children) {
+            child.style.transition = 'all 5s';
+            child.style.opacity = '.3';
+        }
+        const words = 'Палец к губам - тише -'.split(' ');
+        let indexDelta = message.children.length;
+        
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        const br = document.createElement('br');
+        message.appendChild(br);
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index + indexDelta].style.opacity = '1';
+            }, index * 400);
+        });
+    }
+    else if (step === 41) {
+        for (let child of message.children) {
+            child.style.transition = 'all 5s';
+            child.style.opacity = '.3';
+        }
+        const words = 'Так будет лучше нам обоим,'.split(' ');
+        let indexDelta = message.children.length;
+        
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        const br = document.createElement('br');
+        message.appendChild(br);
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index + indexDelta].style.opacity = '1';
+            }, index * 400);
+        });
+    }
+    else if (step === 42) {
+        for (let child of message.children) {
+            child.style.transition = 'all 5s';
+            child.style.opacity = '.3';
+        }
+        const words = 'Просто поверь мне, слышишь...'.split(' ');
+        let indexDelta = message.children.length;
+        
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        const br = document.createElement('br');
+        message.appendChild(br);
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index + indexDelta].style.opacity = '1';
+            }, index * 400);
+        });
+    }
+    else if (step === 43) {
+        for (let child of message.children) {
+            child.style.transition = 'all 5s';
+            child.style.opacity = '.3';
+        }
+        const words = 'Как за окном дышит море прибоем'.split(' ');
+        let indexDelta = message.children.length;
+        
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        const br = document.createElement('br');
+        message.appendChild(br);
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index + indexDelta].style.opacity = '1';
+            }, index * 400);
+        });
+    }
+    else if (step === 44) {
+        for (let child of message.children) {
+            child.style.transition = 'all 5s';
+            child.style.opacity = '.3';
+        }
+        const words = 'И дает пульс фальшивой ночи.'.split(' ');
+        let indexDelta = message.children.length;
+        
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        const br = document.createElement('br');
+        message.appendChild(br);
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index + indexDelta].style.opacity = '1';
+            }, index * 400);
+        });
+    }
+    else if (step === 45) {
+        for (let child of message.children) {
+            child.style.transition = 'all 5s';
+            child.style.opacity = '.3';
+        }
+        const words = 'Знаешь, моя любовь'.split(' ');
+        let indexDelta = message.children.length;
+        
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index + indexDelta].style.opacity = '1';
+            }, index * 400);
+        });
+    }
+    else if (step === 46) {
+        for (let child of message.children) {
+            child.style.transition = 'all 5s';
+            child.style.opacity = '.3';
+        }
+        const words = 'так похожа на многоточие.'.split(' ');
+        let indexDelta = message.children.length;
+        
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = (index > 0 ? ' ' : '') + word;
+            span.style.opacity = '0';
+            span.style.transition = 'opacity 0.5s';
+            span.style.marginRight = '2px';
+            message.appendChild(span);
+        });
+
+        const br = document.createElement('br');
+        message.appendChild(br);
+
+        words.forEach((_, index) => {
+            setTimeout(() => {
+                message.children[index + indexDelta].style.opacity = '1';
+            }, index * 400);
+        });
+        setTimeout(() => {
+            message.style.transition = 'all 5s';
+            message.style.opacity = '0';
+        }, words.length * 400 + 1000);
+    }
+    else if (step === 47) {
+        message.style.transition = 'all 5s';
+        message.style.opacity = '0';
+        setTimeout(() => {
+            message.style.transition = 'none';
+        }, 5000);
+    }
+    else if (step === 48) {
+        const heartParticles = [];
+        const heartPoints = [];
+        const numPoints = 750;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        const scale = 300;
+        const offset = 80;
+        
+        // Generate points in heart shape including inner points
+        for (let i = 0; i < numPoints; i++) {
+            // Generate random points and check if they're inside the heart
+            let x, y;
+            do {
+                // Generate points in a 2x2 square centered at (0,0)
+                x = (Math.random() * 4 - 2) * 0.8;
+                y = (Math.random() * 4 - 2) * 0.8;
+            } while ((x*x + y*y - 1)**3 - x*x * y*y*y > 0);
+
+            // Scale and center the points
+            heartPoints.push({
+                x: centerX + x * scale,
+                y: centerY - y * scale + offset
+            });
+        }
+
+        // Create particles
+        for (let i = 0; i < numPoints; i++) {
+            const particle = new Particle();
+            particle.element.style.animation = 'none';
+            particle.element.style.transition = `all ${Math.random() * 5 + 1}s`;
+            particle.element.style.opacity = '1';
+            particle.moveTo(centerX, centerY);  // Start at center of screen
+            heartParticles.push(particle);
+        }
+
+        // Move particles to heart shape positions
+        setTimeout(() => {
+            heartParticles.forEach((particle, i) => {
+                // Add random offset to final positions
+                const randomOffset = 20; // pixels
+                const offsetX = (Math.random() - 0.5) * randomOffset;
+                const offsetY = (Math.random() - 0.5) * randomOffset;
+                particle.moveTo(
+                    heartPoints[i].x + offsetX,
+                    heartPoints[i].y + offsetY
+                );
+            });
+        }, 100);
+
+        // Fade out particles
+        setTimeout(() => {
+            heartParticles.forEach(particle => {
+                particle.element.style.opacity = '0';
+            });
+        }, 10000);
     }
 }
 
@@ -676,17 +1102,33 @@ var timeCodes = [
     { time: 165, step: 26 },
     { time: 168.1, step: 27 },
     { time: 179.3, step: 28 },
-    { time: 186, step: 29 },
+    { time: 185, step: 29 },
     { time: 190.7, step: 30 },
-    { time: 194, step: 31 },
+    { time: 193.8, step: 31 },
     { time: 196.8, step: 32 },
+    { time: 199.7, step: 33 },
+    { time: 202.4, step: 34 },
+    { time: 205.3, step: 35 },
+    { time: 207, step: 36 },
+    { time: 207.4, step: 37 },
+    { time: 255, step: 38 },
+    { time: 257.5, step: 39 },
+    { time: 260.9, step: 40 },
+    { time: 263.6, step: 41 },
+    { time: 267.2, step: 42 },
+    { time: 269.9, step: 43 },
+    { time: 273, step: 44 },
+    { time: 276.7, step: 45 },
+    { time: 279.4, step: 46 },
+    { time: 280, step: 47 },
+    { time: 282, step: 48 },
 ];
 
 setInterval(() => {
     let time = Math.floor(music.currentTime * 10) / 10;
     for (let i = 0; i < timeCodes.length; i++) {
-        if (time === timeCodes[i].time && !window.step9Triggered) {
-            window.step9Triggered = true;
+        if (time === timeCodes[i].time && !window.stepCodes[timeCodes[i].step]) {
+            window.stepCodes[timeCodes[i].step] = true;
             main(timeCodes[i].step);
         }
     }
@@ -706,6 +1148,15 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
+
+function reload(ls=false) {
+    if (ls) {
+        localStorage.setItem('step', 3);
+    }
+    location.reload();  
+}
+
+window.addEventListener('resize', reload);
 
 const numSpots = spots.children.length;
 const gridSize = Math.ceil(Math.sqrt(numSpots));
@@ -736,6 +1187,4 @@ Array.from(spots.children).forEach((spot, i) => {
 
 waveAnimation();
 main(8);
-music.currentTime = 190;
-
-// Сейчас: сделать кубик в лесу
+music.currentTime = 206;
